@@ -18,9 +18,12 @@ def minkowski_distance(a, b, p=2):
     Returns:
         float: Minkowski distance between arrays a and b.
     """
-
-    # TODO
-
+    suma = 0
+    i = 0
+    while i < len(a):
+        suma += abs(a[i] - b[i]) ** p
+        i += 1
+    return suma ** (1/p)
 
 # k-Nearest Neighbors Model
 
@@ -50,7 +53,12 @@ class knn:
             k (int, optional): Number of neighbors to use. Defaults to 5.
             p (int, optional): The degree of the Minkowski distance. Defaults to 2.
         """
-        # TODO
+        if X_train.shape[0] != y_train.shape[0] or k < 0 or p < 0:
+            return
+        self.k = k
+        self.p = p
+        self.x_train = X_train
+        self.y_train = y_train
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -62,7 +70,9 @@ class knn:
         Returns:
             np.ndarray: Predicted class labels.
         """
-        # TODO
+        
+
+        return X
 
     def predict_proba(self, X):
         """

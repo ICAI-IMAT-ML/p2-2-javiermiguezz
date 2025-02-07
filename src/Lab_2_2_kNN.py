@@ -70,9 +70,18 @@ class knn:
         Returns:
             np.ndarray: Predicted class labels.
         """
-        
-
-        return X
+        lista = []
+        for i in range(X.shape[0]):
+            indices = self.get_k_nearest_neighbors(self.compute_distances(X[i]))
+            n_si = 0
+            for indice in indices:
+                if self.y_train[indice] == 1:
+                    n_si += 1
+                if n_si > self.k - n_si:
+                    lista.append(1)
+                else:
+                    lista.append(0)
+        return lista
 
     def predict_proba(self, X):
         """
@@ -87,7 +96,15 @@ class knn:
         Returns:
             np.ndarray: Predicted class probabilities.
         """
-        # TODO
+        lista = []
+        for i in range(X.shape[0]):
+            indices = self.get_k_nearest_neighbors(self.compute_distances(X[i]))
+            n_si = 0
+            for indice in indices:
+                if self.y_train[indice] == 1:
+                    n_si += 1
+                lista.append(n_si / self.k)
+        return lista
 
     def compute_distances(self, point: np.ndarray) -> np.ndarray:
         """Compute distance from a point to every point in the training dataset
@@ -98,7 +115,10 @@ class knn:
         Returns:
             np.ndarray: distance from point to each point in the training dataset.
         """
-        # TODO
+        lista = []
+        for i in range(self.x_train.shape[0]):
+            lista.append(i, minkowski_distance(self.x_train[i], point)) 
+        return lista
 
     def get_k_nearest_neighbors(self, distances: np.ndarray) -> np.ndarray:
         """Get the k nearest neighbors indices given the distances matrix from a point.
@@ -112,7 +132,15 @@ class knn:
         Hint:
             You might want to check the np.argsort function.
         """
-        # TODO
+        lista = []
+        for _ in range(self.k):
+            min = 99999999999999
+            for i in distances:
+                if i[1] < min:
+                    min = i[1]
+            lista.append(i[0])
+            distances.pop(distances.index(i))
+        return lista
 
     def most_common_label(self, knn_labels: np.ndarray) -> int:
         """Obtain the most common label from the labels of the k nearest neighbors

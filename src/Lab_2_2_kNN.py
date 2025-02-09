@@ -53,13 +53,16 @@ class knn:
             k (int, optional): Number of neighbors to use. Defaults to 5.
             p (int, optional): The degree of the Minkowski distance. Defaults to 2.
         """
-        if X_train.shape[0] != y_train.shape[0] or k < 0 or p < 0:
-            return
-        self.k = k
-        self.p = p
-        self.x_train = X_train
-        self.y_train = y_train
-
+        if len(X_train) != len(y_train):
+            raise ValueError('Length of X_train and y_train must be equal.')
+        elif k <= 0 or p <= 0:
+            raise ValueError('k and p must be positive integers.')
+        else:
+            self.k = k
+            self.p = p
+            self.x_train = X_train
+            self.y_train = y_train
+        
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
         Predict the class labels for the provided data.
@@ -71,16 +74,16 @@ class knn:
             np.ndarray: Predicted class labels.
         """
         lista = []
-        for i in range(X.shape[0]):
+        for i in range(len(X)):
             indices = self.get_k_nearest_neighbors(self.compute_distances(X[i]))
             n_si = 0
             for indice in indices:
                 if self.y_train[indice] == 1:
                     n_si += 1
-                if n_si > self.k - n_si:
-                    lista.append(1)
-                else:
-                    lista.append(0)
+            if n_si > self.k - n_si:
+                lista.append(1)
+            else:
+                lista.append(0)
         return lista
 
     def predict_proba(self, X):
@@ -97,14 +100,14 @@ class knn:
             np.ndarray: Predicted class probabilities.
         """
         lista = []
-        for i in range(X.shape[0]):
+        for i in range(len(X)):
             indices = self.get_k_nearest_neighbors(self.compute_distances(X[i]))
             n_si = 0
             for indice in indices:
                 if self.y_train[indice] == 1:
                     n_si += 1
-                lista.append(n_si / self.k)
-        return lista
+            lista.append([n_si / self.k, (self.k - n_si) / self.k])
+        return np.array(lista)
 
     def compute_distances(self, point: np.ndarray) -> np.ndarray:
         """Compute distance from a point to every point in the training dataset
@@ -116,8 +119,8 @@ class knn:
             np.ndarray: distance from point to each point in the training dataset.
         """
         lista = []
-        for i in range(self.x_train.shape[0]):
-            lista.append(i, minkowski_distance(self.x_train[i], point)) 
+        for i in range(len(self.x_train)):
+            lista.append(minkowski_distance(self.x_train[i], point)) 
         return lista
 
     def get_k_nearest_neighbors(self, distances: np.ndarray) -> np.ndarray:
@@ -135,11 +138,13 @@ class knn:
         lista = []
         for _ in range(self.k):
             min = 99999999999999
+            indice = 0
             for i in distances:
-                if i[1] < min:
-                    min = i[1]
-            lista.append(i[0])
-            distances.pop(distances.index(i))
+                if i < min and indice not in lista:
+                    indice_min = indice
+                    min = i
+                indice += 1
+            lista.append(indice_min)
         return lista
 
     def most_common_label(self, knn_labels: np.ndarray) -> int:
@@ -151,7 +156,14 @@ class knn:
         Returns:
             int: most common label
         """
-        # TODO
+        n_si = 0
+        for indice in knn_labels:
+            if self.y_train[indice] == 1:
+                n_si += 1
+        if n_si > self.k - n_si:
+            return 1
+        else:
+            return 0
 
     def __str__(self):
         """

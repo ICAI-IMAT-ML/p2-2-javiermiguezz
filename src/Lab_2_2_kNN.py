@@ -268,22 +268,48 @@ def evaluate_classification_metrics(y_true, y_pred, positive_label):
     y_pred_mapped = np.array([1 if label == positive_label else 0 for label in y_pred])
 
     # Confusion Matrix
-    # TODO
+    tn = 0
+    fp = 0
+    fn = 0
+    tp = 0
+    for i in range(len(y_true_mapped)):
+        if y_true_mapped[i] == y_pred_mapped[i]:
+            if y_true_mapped[i] == 1:
+                tp += 1
+            elif y_true_mapped[i] == 0:
+                tn += 1
+        elif y_true_mapped[i] != y_pred_mapped[i]:
+            if y_true_mapped[i] == 1:
+                fn += 1
+            elif y_true_mapped[i] == 0:
+                fp += 1
 
     # Accuracy
-    # TODO
+    accuracy = (tp + tn) / (tp + tn + fp + fn)
 
     # Precision
-    # TODO
+    if (tp + fp) != 0:
+        precision = tp / (tp + fp)
+    else:
+        precision = 0
 
     # Recall (Sensitivity)
-    # TODO
+    if (tp + fn) != 0:
+        recall = tp / (tp + fn)
+    else:
+        recall = 0
 
     # Specificity
-    # TODO
-
+    if (tn + fp) != 0:
+        specificity = tn / (tn + fp)
+    else:
+        specificity = 0
+    
     # F1 Score
-    # TODO
+    if (precision + recall) != 0:
+        f1 = 2 * (precision * recall) / (precision + recall)
+    else:
+        f1 = 0
 
     return {
         "Confusion Matrix": [tn, fp, fn, tp],
@@ -319,7 +345,25 @@ def plot_calibration_curve(y_true, y_probs, positive_label, n_bins=10):
             - "true_proportions": Array of the fraction of positives in each bin
 
     """
-    # TODO
+    # Map string labels to 0 or 1
+    y_true_mapped = np.array([1 if label == positive_label else 0 for label in y_true])
+
+    bin_centers = [(i / n_bins) + (1 / (2 * n_bins)) for i in range(n_bins)]
+
+    true_proportions = []
+    for centro in bin_centers:
+        n = 0
+        n_si = 0
+        for i in range(len(y_probs)):
+            if centro - (1 / (2 * n_bins)) <= y_probs[i] < centro + (1 / (2 * n_bins)):
+                if y_true_mapped[i] == 1:
+                    n_si += 1
+                n += 1
+        if n != 0:
+            true_proportions.append(n_si / n)
+        else:
+            true_proportions.append(1)
+
     return {"bin_centers": bin_centers, "true_proportions": true_proportions}
 
 
@@ -349,7 +393,9 @@ def plot_probability_histograms(y_true, y_probs, positive_label, n_bins=10):
                 Array of predicted probabilities for the negative class.
 
     """
-    # TODO
+    # Map string labels to 0 or 1
+    y_true_mapped = np.array([1 if label == positive_label else 0 for label in y_true])
+
 
     return {
         "array_passed_to_histogram_of_positive_class": y_probs[y_true_mapped == 1],
@@ -379,5 +425,38 @@ def plot_roc_curve(y_true, y_probs, positive_label):
             - "tpr": Array of True Positive Rates for each threshold.
 
     """
-    # TODO
+    # Map string labels to 0 or 1
+    y_true_mapped = np.array([1 if label == positive_label else 0 for label in y_true])
+
+    fpr = []
+    tpr = []
+    thresholds = np.linspace(0, 1, 11)
+
+    for thresh in thresholds:
+        tp = 0
+        fp = 0
+        fn = 0
+        tn = 0
+        
+        for i in range(len(y_true_mapped)):
+            if y_probs[i] >= thresh:
+                if y_true_mapped[i] == 1:
+                    tp += 1
+                else:
+                    fp += 1
+            elif y_probs[i] < thresh:
+                if y_true_mapped[i] == 1:
+                    fn += 1
+                else:
+                    tn += 1
+        
+        if (tp + fn) != 0:
+            tpr.append(tp / (tp + fn))
+        else:
+            tpr.append(1)
+        if (fp + tn) != 0:
+            fpr.append(fp / (fp + tn))
+        else:
+            fpr.append(0)
+    
     return {"fpr": np.array(fpr), "tpr": np.array(tpr)}
